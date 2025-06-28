@@ -1,42 +1,101 @@
-import { useAuth } from '../hooks/useAuth';
+
+
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { getAssets } from '../api'; // Import our new flexible getAssets function
+import AssetCard from '../components/AssetCard';
 
 const Dashboard = () => {
-    const { user } = useAuth();
+    const [assets, setAssets] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
 
-    // The component will only render if the user is authenticated,
-    // thanks to the PrivateRoute.
-    if (!user) {
-        return null; 
+    // --- NEW: State for filter values ---
+    const [filters, setFilters] = useState({
+        search: '',
+        status: '',
+    });
+
+    // --- NEW: Handler for filter changes ---
+    const handleFilterChange = (e) => {
+        const { name, value } = e.target;
+        setFilters(prevFilters => ({
+            ...prevFilters,
+            [name]: value,
+        }));
+    };
+
+    const clearFilters = () => {
+        setFilters({ search: '', status: '' });
+    };
+
+    // --- UPDATED: useEffect now depends on filters ---
+    useEffect(() => {
+        const fetchAssets = async () => {
+            setLoading(true);
+            try {
+                // Pass the current filters to the API call
+                const data = await getAssets(filters);
+                setAssets(data);
+            } catch (err) {
+                setError('Failed to fetch assets.');
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchAssets();
+    }, [filters]); // This hook now re-runs whenever the 'filters' object changes
+
+    if (error) {
+        return <p className="error-message">{error}</p>;
     }
 
     return (
         <div>
-            <h2>Dashboard</h2>
-            <h3>Welcome, {user.name}!</h3>
-            <p>Your Role: <strong>{user.role}</strong></p>
-            
-            <div className="dashboard-content">
-                <h4>Your Actions:</h4>
-                <ul>
-                    {user.role === 'user' && (
-                        <li>Upload new assets (images, videos, etc.)</li>
-                    )}
-                    {user.role === 'reviewer' && (
-                        <>
-                            <li>Upload new assets</li>
-                            <li>Review and approve/reject assets from other users</li>
-                            <li>Create and manage collections</li>
-                        </>
-                    )}
-                    {user.role === 'admin' && (
-                        <li>As an Admin, you can manage users from the Admin Dashboard.</li>
-                    )}
-                </ul>
-                <p>
-                    This is your main workspace. Future features like an asset grid,
-                    upload forms, and review queues will appear here.
-                </p>
+            <div className="dashboard-header">
+                <h2>My Assets</h2>
             </div>
+            
+            {/* --- NEW: Filter Bar --- */}
+            <div className="filter-bar">
+                <input
+                    type="text"
+                    name="search"
+                    placeholder="Search by title or tag..."
+                    value={filters.search}
+                    onChange={handleFilterChange}
+                    className="filter-search"
+                />
+                <select 
+                    name="status" 
+                    value={filters.status} 
+                    onChange={handleFilterChange} 
+                    className="filter-select"
+                >
+                    <option value="">All Statuses</option>
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                </select>
+                <button onClick={clearFilters} className="btn-secondary">Clear Filters</button>
+            </div>
+
+            {loading ? (
+                <div>Loading assets...</div>
+            ) : assets.length === 0 ? (
+                <div className="empty-dashboard">
+                    <p>No assets match your filters. Why not upload one?</p>
+                    <Link to="/upload-asset" className="btn">Upload New Asset</Link>
+                </div>
+            ) : (
+                <div className="assets-grid">
+                    {assets.map(asset => (
+                        <AssetCard key={asset._id} asset={asset} />
+                    ))}
+                </div>
+            )}
         </div>
     );
 };

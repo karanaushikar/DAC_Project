@@ -9,8 +9,8 @@ const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 // Import routes
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
-const assetRoutes = require('./routes/assetRoutes');
-
+const assetRoutes = require('./routes/assetRoutes'); 
+const collectionRoutes = require('./routes/collectionRoutes')
 
 connectDB();
 
@@ -25,8 +25,9 @@ app.get('/', (req, res) => {
 
 // Mount routes
 app.use('/api/auth', authRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/assets', assetRoutes);
+app.use('/api/admin', adminRoutes); 
+app.use('/api/assets', assetRoutes); 
+app.use('/api/collections', collectionRoutes);
 
 // Error Middleware
 app.use(notFound);
