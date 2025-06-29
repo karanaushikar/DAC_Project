@@ -58,7 +58,7 @@ const Dashboard = () => {
                 <h2>My Assets</h2>
             </div>
             
-            {/* --- NEW: Filter Bar --- */}
+            {/* ---  Filter Bar --- */}
             <div className="filter-bar">
                 <input
                     type="text"
@@ -90,7 +90,7 @@ const Dashboard = () => {
                     <Link to="/upload-asset" className="btn">Upload New Asset</Link>
                 </div>
             ) : (
-                <div className="assets-grid">
+                <div className="asset-grid">
                     {assets.map(asset => (
                         <AssetCard key={asset._id} asset={asset} />
                     ))}
